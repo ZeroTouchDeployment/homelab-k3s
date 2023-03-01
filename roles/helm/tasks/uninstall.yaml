@@ -1,0 +1,6 @@
+---
+  # Uninstall Helm
+- name: helm - Uninstall Helm
+  file:
+    state: absent
+    path: /usr/local/bin/helm

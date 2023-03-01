@@ -1,0 +1,29 @@
+---
+  # Check if installed
+- name: longhorn - Verify if chart via Helm is deployed
+  shell:
+    cmd: helm list -A -o json | jq '.[]|select(.name=="longhorn")'| jq -r .status
+  register: helm_check
+
+  # Uninstall
+- name: longhorn - Uninstall chart
+  include_tasks: uninstall.yaml
+  when: helm_check.stdout == "deployed"
+
+  # Prerequisites
+- name: longhorn - Prerequisites tasks
+  include_tasks: prerequisites.yaml
+
+  # Add Longhorn repository
+- name: longhorn - Add Helm repository
+  shell: 
+    cmd: helm repo add longhorn {longhorn_repository_url}}; helm repo update
+  when: helm_check.stdout != "deployed"
+
+  # Deploy Longhorn chart
+- name: longhorn - Deploy Helm chart
+  shell: 
+    cmd: |
+      kubectl create namespace longhorn-system
+      helm install longhorn longhorn/longhorn --namespace longhorn-system --version {{ longhorn_version }}
+  when: helm_check.stdout != "deployed"

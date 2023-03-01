@@ -1,0 +1,18 @@
+---
+- name: minio - Verify if chart via Helm is deployed
+  shell:
+    cmd: helm list -A -o json | jq '.[]|select(.name=="minio-operator")'| jq -r .status
+  register: helm_check
+
+  # Add MinIO repository
+- name: minio - Add Helm minio from repository
+  shell: 
+    cmd: helm repo add minio {{minio_repository_url}}; helm repo update
+  when: helm_check.stdout != "deployed"
+
+  # Deploy minio chart
+- name: minio - Deploy minio helm chart
+  shell: 
+    cmd: helm install minio-operator minio/operator --namespace {{ minio_namespace }} --create-namespace --version {{ minio_version }} --set service.type=NodePort --set service.ports.console={{ minio_nodeport }}
+  when: helm_check.stdout != "deployed"
+

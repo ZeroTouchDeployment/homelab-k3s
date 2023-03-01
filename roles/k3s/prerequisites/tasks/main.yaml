@@ -1,0 +1,120 @@
+---
+- name: Set SELinux to disabled state
+  selinux:
+    state: disabled
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Enable IPv6 forwarding
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: "1"
+    state: present
+    reload: yes
+  when: ansible_all_ipv6_addresses
+
+- name: Add br_netfilter to /etc/modules-load.d/
+  copy:
+    content: "br_netfilter"
+    dest: /etc/modules-load.d/br_netfilter.conf
+    mode: "u=rw,g=,o="
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
+
+- name: Load br_netfilter
+  modprobe:
+    name: br_netfilter
+    state: present
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
+
+- name: Set bridge-nf-call-iptables (just to be sure)
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+    reload: yes
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+
+- name: Add /usr/local/bin to sudo secure_path
+  lineinfile:
+    line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+    regexp: "Defaults(\\s)*secure_path(\\s)*="
+    state: present
+    insertafter: EOF
+    path: /etc/sudoers
+    validate: 'visudo -cf %s'
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
+
+
+- name: Install tar package
+  dnf:
+    name: tar
+    state: present
+    update_cache: True
+
+
+
+
+  # Open firewall ports for k3s
+- name : Open firewall ports for k3s
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    # required only for HA with embedded etcd
+    - 2379-2380/tcp
+    # k3s supervisor and kubernetes api server
+    - 6443/tcp
+    # flannex vxlan
+    - 8472/udp
+    # kubelet metrics
+    - 10250/tcp
+    # flannel wireguard
+    - 51820-51821/udp
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
+
+  # Open firewall ports for k3s
+#- name : Open firewall ports for k3s
+#  shell: 
+#    cmd: firewall-cmd --permanent --zone=trusted --add-source={{ item }} 
+#  loop:
+#    - "{{ k3s_cluster_cidr }}"
+#    - "{{ k3s_service_cidr }}"
+#  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']  
+  
+  # Open firewall ports for MetalLB
+- name : Open firewall ports for MetalLB
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    - 7946/tcp
+    - 7946/udp
+    - 30000-32767/tcp
+    - 9443/tcp
+    - 5473/tcp
+    - 4789/udp
+    - 7472/udp
+    - 7472/tcp
+
+  # disable firewall
+- name: Stop and disable firewalld.
+  service:
+    name: firewalld
+    state: stopped
+    enabled: False
+
+- name: set hostname
+  hostname:
+    name: "{{ hostname }}"
+

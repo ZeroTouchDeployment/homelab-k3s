@@ -1,0 +1,37 @@
+---
+- name: traefik - Verify if Traefik via Helm is deployed
+  shell:
+    cmd: helm list -A -o json | jq '.[]|select(.name=="traefik")'| jq -r .status
+  register: helm_check
+
+  # Add Traefik repository
+- name: traefik - Add Helm Traefik from repository
+  shell: 
+    cmd: helm repo add traefik {{traefik_repository_url}}; helm repo update
+  when: helm_check.stdout != "deployed"
+
+  # Prepare Traefik values
+- name: traefik - Prepare Traefik values
+  copy:
+    dest: "/tmp/traefik_values.yaml"
+    content: |
+      ---
+      dashboard:
+        enabled: true
+        domain: traefik.rl8.local
+      rbac:
+       enabled: true
+
+  # Deploy traefik chart
+- name: traefik - Deploy Traefik chart
+  shell:
+     cmd: helm install traefik traefik/traefik --namespace {{ traefik_namespace }} --create-namespace -f /tmp/traefik-values.yaml
+  when: helm_check.stdout != "deployed"
+
+- name: traefik - Wait for Traefik
+  shell:
+    cmd: kubectl get pods -n {{ traefik_namespace }} -o json | jq -r '.items[] | select(.metadata.name | startswith("traefik"))' | jq -r ".status.phase"
+  register: kubectl_get_pods
+  until: kubectl_get_pods.stdout == "Running"
+  retries: 100
+  delay: 10

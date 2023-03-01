@@ -1,0 +1,4 @@
+---
+traefik_repository_url: "https://traefik.github.io/charts"
+traefik_namespace     : "traefik"
+traefik_version       : ""

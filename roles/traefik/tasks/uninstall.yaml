@@ -1,0 +1,57 @@
+---
+
+  # Uninstall k3s dashboard
+- name: Uninstall - Verify if k3s dashboard via Helm is deployed
+  shell: 
+    cmd: helm list -A -o json | jq '.[]|select(.name=="kubernetes-dashboard")'| jq -r .status
+  register: k3s_dashboard_check
+
+- name: Uninstall - Uninstall k3s dashboard
+  shell: 
+    cmd: helm uninstall kubernetes-dashboard --namespace {{ k3s_dashboard_namespace }}
+  when: k3s_dashboard_check.stdout == 'deployed'
+
+  # Uninstall MetalLB
+- name: Uninstall - Verify if MetalLB via Helm is deployed
+  shell: 
+    cmd: helm list -A -o json | jq '.[]|select(.name=="metallb")'| jq -r .status
+  register: metallb_check
+
+- name: Uninstall - Uninstall MetalLB
+  shell: 
+    cmd: helm uninstall metallb --namespace {{ metallb_namespace }} 
+  when: metallb_check.stdout == 'deployed'
+
+  # Uninstall traefik
+- name: Uninstall - Verify if traefik via Helm is deployed
+  shell: 
+    cmd: helm list -A -o json | jq '.[]|select(.name=="traefik")'| jq -r .status
+  register: traefik_check
+
+- name: Uninstall - Uninstall traefik
+  shell: 
+    cmd: helm uninstall traefik --namespace {{ traefik_namespace }} 
+  when: traefik_check.stdout == 'deployed'
+
+  # Unistall cert-manager
+- name: Uninstall - Verify if cert-manager via Helm is deployed
+  shell: 
+    cmd: helm list -A -o json | jq '.[]|select(.name=="cert-manager")'| jq -r .status
+  register: certmanager_check
+
+- name: Uninstall - Uninstall cert-manager
+  shell: 
+    cmd: helm uninstall cert-manager --namespace {{certmanager_namespace }}
+  when: certmanager_check.stdout == 'deployed'
+
+  # Uninstall k3s
+- name: Uninstall - Uninstall k3s
+  shell: 
+    cmd: /usr/local/bin/k3s-uninstall.sh
+
+
+
+
+
+
+
