@@ -6,6 +6,8 @@
     # Add kubernetes-dashboard repository
 - name: vault - Add Helm vault repository  
   shell: 
-    cmd: helm repo add vault {{ vault_repository }}; helm repo update
+    cmd: |
+      helm repo add vault {{ vault_repository }}
+      helm repo update
   when: helm_check.stdout != "deployed"
 

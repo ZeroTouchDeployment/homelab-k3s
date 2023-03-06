@@ -1,6 +1,7 @@
 ---
 longhorn_repository_url: "https://charts.longhorn.io"
-longhorn_version       : "v1.4.0"
 longhorn_nodeport      : 39090
+longhorn_username      : ""
+loghorn_password       : ""
 
 

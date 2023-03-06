@@ -4,10 +4,12 @@
     cmd: helm list -A -o json | jq '.[]|select(.name=="kubernetes-dashboard")'| jq -r .status
   register: helm_check
 
-  # Add kubernetes-dashboard repository
-- name: k3s dashboard - Add Helm kubernetes dashboard repository  
+  # Add helm repository
+- name: k3s dashboard - Add Helm repository
   shell: 
-    cmd: helm repo add kubernetes-dashboard {{ dashboard_repository_url }}; helm repo update
+    cmd: |
+      helm repo add kubernetes-dashboard {{dashboard_repository_url}}
+      helm repo update
   when: helm_check.stdout != "deployed"
 
   # Deploy kubernetes-dashboard chart
@@ -15,6 +17,8 @@
   shell: 
     cmd: helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --namespace {{ dashboard_namespace }} --create-namespace --set service.type=NodePort --set service.nodePort={{ dashboard_nodeport }} --set serviceAccount.name={{ dashboard_username }}
   when: helm_check.stdout != "deployed"
+
+
 
 - name: k3s dashboard - Output Kubernetes Dashboard URL
   debug:

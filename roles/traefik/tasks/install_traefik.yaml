@@ -7,7 +7,9 @@
   # Add Traefik repository
 - name: traefik - Add Helm Traefik from repository
   shell: 
-    cmd: helm repo add traefik {{traefik_repository_url}}; helm repo update
+    cmd: |
+      helm repo add traefik {{traefik_repository_url}}
+      helm repo update
   when: helm_check.stdout != "deployed"
 
   # Prepare Traefik values

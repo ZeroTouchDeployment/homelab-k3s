@@ -4,6 +4,10 @@
 # will determine the right interface automatically at runtime.
 kubevip_iface: null
 
+kubevip_repository_url: "https://raw.githubusercontent.com/kube-vip"
+kubevip_version       : "v0.5.10"
+
+
 k3s_server_init_args: >-
   {% if groups['master'] | length > 1 %}
     {% if ansible_hostname == hostvars[groups['master'][0]]['ansible_hostname'] %}

@@ -26,3 +26,5 @@
       become: true
     - role: cert-manager
       become: true
+    - role: longhorn
+      become: true

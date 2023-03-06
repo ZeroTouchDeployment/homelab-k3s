@@ -54,67 +54,40 @@
   when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
 
 
-- name: Install tar package
+  # Install required packages
+- name: Install required packages
   dnf:
-    name: tar
+    name: "{{ item }}"
     state: present
     update_cache: True
+  with_items: " {{ k3s_required_packages }}"
 
-
-
-
-  # Open firewall ports for k3s
-- name : Open firewall ports for k3s
-  firewalld:
-    port: "{{ item }}"
-    permanent: yes
-    state: enabled
-  loop:
-    # required only for HA with embedded etcd
-    - 2379-2380/tcp
-    # k3s supervisor and kubernetes api server
-    - 6443/tcp
-    # flannex vxlan
-    - 8472/udp
-    # kubelet metrics
-    - 10250/tcp
-    # flannel wireguard
-    - 51820-51821/udp
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']
-
-  # Open firewall ports for k3s
-#- name : Open firewall ports for k3s
-#  shell: 
-#    cmd: firewall-cmd --permanent --zone=trusted --add-source={{ item }} 
-#  loop:
-#    - "{{ k3s_cluster_cidr }}"
-#    - "{{ k3s_service_cidr }}"
-#  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'Rocky']  
-  
-  # Open firewall ports for MetalLB
-- name : Open firewall ports for MetalLB
-  firewalld:
-    port: "{{ item }}"
-    permanent: yes
-    state: enabled
-  loop:
-    - 7946/tcp
-    - 7946/udp
-    - 30000-32767/tcp
-    - 9443/tcp
-    - 5473/tcp
-    - 4789/udp
-    - 7472/udp
-    - 7472/tcp
-
-  # disable firewall
+  # Disable firewall
 - name: Stop and disable firewalld.
-  service:
+  ansible.builtin.service:
     name: firewalld
     state: stopped
-    enabled: False
+    enabled: false
 
+  # Set hostname
 - name: set hostname
-  hostname:
+  ansible.builtin.hostname:
     name: "{{ hostname }}"
+
+  # Set timezone
+- name: Configure timezone on all nodes
+  community.general.timezone:
+    name: "{{ k3s_timezone }}"
+
+- name: Ensure chrony package is installed
+  ansible.builtin.package:
+    name: chrony
+    state: present
+- name: Enable and start chronyd service
+  ansible.builtin.service:
+    name: chronyd
+    state: started
+    enabled: yes
+- name: Synchronize time manually
+  ansible.builtin.shell:  chronyc sources
 

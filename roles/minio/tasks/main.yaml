@@ -7,7 +7,9 @@
   # Add MinIO repository
 - name: minio - Add Helm minio from repository
   shell: 
-    cmd: helm repo add minio {{minio_repository_url}}; helm repo update
+    cmd: |
+      helm repo add minio {{minio_repository_url}}
+      helm repo update
   when: helm_check.stdout != "deployed"
 
   # Deploy minio chart

@@ -1,0 +1,13 @@
+calico_repository_url : ""
+calico_namespace      : ""
+calico_version        : ""
+
+# Calico CNI firewall ports
+calico_udp_ports:
+  - 4789
+calico_tcp_ports:
+  - 5473
+  - 179
+  - 5473
+
+  

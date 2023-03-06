@@ -12,7 +12,9 @@
   # Add Helm repository
 - name: cert-manager - Add Helm repository
   shell: 
-    cmd: helm repo add jetstack {jetstack_repository_url}}; helm repo update
+    cmd: |
+      helm repo add jetstack {{ certmanager_repository_url }}
+      helm repo update
   when: helm_check.stdout != "deployed"
 
   # Deploy chart
@@ -20,3 +22,4 @@
   shell: 
     cmd: helm install cert-manager jetstack/cert-manager --create-namespace --version {{ certmanager_version }} --set installCRDs=true
   when: helm_check.stdout != "deployed"
+  

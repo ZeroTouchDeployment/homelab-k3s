@@ -12,7 +12,9 @@
   # Add sonaytype nexus repository
 - name: nexus - Add Helm nexus repository  
   shell: 
-    cmd: helm repo add sonatype {{ nexus_repository }}; helm repo update
+    cmd: |
+      helm repo add sonatype {{ nexus_repository }}
+      helm repo update
   when: helm_check.stdout != "deployed"
 
   # Deploy nexus chart

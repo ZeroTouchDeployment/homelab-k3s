@@ -17,7 +17,9 @@
   # Add Longhorn repository
 - name: longhorn - Add Helm repository
   shell: 
-    cmd: helm repo add longhorn {longhorn_repository_url}}; helm repo update
+    cmd: |  
+      helm repo add longhorn {longhorn_repository_url}}
+      helm repo update
   when: helm_check.stdout != "deployed"
 
   # Deploy Longhorn chart
@@ -25,5 +27,5 @@
   shell: 
     cmd: |
       kubectl create namespace longhorn-system
-      helm install longhorn longhorn/longhorn --namespace longhorn-system --version {{ longhorn_version }}
+      helm install longhorn longhorn/longhorn --namespace longhorn-system
   when: helm_check.stdout != "deployed"
